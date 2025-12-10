@@ -9,9 +9,6 @@ jobs:
   build:
     runs-on: macos-latest
 
-    env:
-      THEOS: $HOME/theos
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,7 +20,12 @@ jobs:
 
       - name: Install Theos
         run: |
+          # 正确设置 THEOS 路径，并写入 GITHUB_ENV
+          export THEOS="$HOME/theos"
+          echo "THEOS=$THEOS" >> "$GITHUB_ENV"
+
           if [ ! -d "$THEOS" ]; then
+            echo "Cloning Theos into $THEOS"
             git clone --recursive https://github.com/theos/theos.git "$THEOS"
           else
             echo "Theos already exists at $THEOS"
@@ -31,6 +33,7 @@ jobs:
 
       - name: Download iOS SDK
         run: |
+          echo "Using THEOS at: $THEOS"
           curl -LO https://github.com/theos/sdks/archive/master.zip
           unzip master.zip
           mkdir -p "$THEOS/sdks"
@@ -39,6 +42,7 @@ jobs:
 
       - name: Build Package
         run: |
+          echo "THEOS in Build Package step: $THEOS"
           make package FINALPACKAGE=1 MESSAGES=0
 
       - name: Upload Deb
