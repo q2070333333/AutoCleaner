@@ -13,21 +13,28 @@ static void run_cmd(const char *cmd) {
     waitpid(pid, &status, 0);
 }
 
-// 找一个可用的 window
+// 找一个可用的 window（把废弃警告关掉，避免 -Werror 报错）
 static UIWindow *ac_mainWindow(void) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     UIWindow *keyWindow = [UIApplication sharedApplication].keyWindow;
     if (keyWindow) return keyWindow;
 
     for (UIWindow *win in [UIApplication sharedApplication].windows) {
         if (win.isKeyWindow) return win;
     }
-    return [UIApplication sharedApplication].windows.firstObject;
+
+    NSArray *windows = [UIApplication sharedApplication].windows;
+    return windows.count > 0 ? windows.firstObject : nil;
+#pragma clang diagnostic pop
 }
 
 // 弹窗提示
 static void show_alert(NSString *msg) {
     dispatch_async(dispatch_get_main_queue(), ^{
         UIWindow *window = ac_mainWindow();
+        if (!window) return;
+
         UIViewController *rootVC = window.rootViewController;
         if (!rootVC) return;
 
@@ -78,24 +85,27 @@ static void show_alert(NSString *msg) {
 
     // 3. 调起巨魔安装 IPA
     NSString *ipaPath = @"/var/mobile/media/downloads/3.86改5.11-18.6.ipa";
-    NSString *urlStr =
-        [NSString stringWithFormat:@"apple-magnifier://install?url=file://%@", ipaPath];
+
+    // 先用 URL 方案
+    NSString *urlStr = [NSString stringWithFormat:@"apple-magnifier://install?url=file://%@", ipaPath];
     NSURL *url = [NSURL URLWithString:urlStr];
 
     if ([[UIApplication sharedApplication] canOpenURL:url]) {
         [[UIApplication sharedApplication] openURL:url options:@{} completionHandler:nil];
         show_alert(@"清理完成，正在调起巨魔安装...");
     } else {
+        // 备用：用 uiopen 执行
         NSString *cmd =
-            [NSString stringWithFormat:
-                 "uiopen 'apple-magnifier://install?url=file://%@'", ipaPath];
-        run_cmd([cmd UTF8String]);
+            [NSString stringWithFormat:@"uiopen 'apple-magnifier://install?url=file://%@'", ipaPath];
+        run_cmd(cmd.UTF8String);
         show_alert(@"已执行清理。如果未自动跳转，请检查巨魔 URL Scheme。");
     }
 }
 
 - (void)handlePan:(UIPanGestureRecognizer *)p {
     UIWindow *window = ac_mainWindow();
+    if (!window) return;
+
     CGPoint panPoint = [p locationInView:window];
 
     if (p.state == UIGestureRecognizerStateChanged) {
