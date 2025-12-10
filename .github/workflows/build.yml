@@ -22,9 +22,10 @@ jobs:
           # 某些 runner 可能已经装了，失败也不致命，所以后面加 || true
           brew install ldid dpkg fakeroot || true
 
-      - name: Install Theos
+            - name: Install Theos
         run: |
-          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)" \
+            || echo "install-theos 在下载 SDK 时失败，忽略这一步，后面我们手动下 SDK"
           echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
 
       - name: Download iOS SDK
