@@ -1,48 +1,32 @@
 name: Build Tweak
 
-on:
-  push:
-    branches:
-      - main    # 如果你的默认分支不是 main，这里改成你的分支名
+on: [push]
 
 jobs:
   build:
     runs-on: macos-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # （可选，但推荐）缓存 Theos 和 SDK，加快后面运行速度
-      - name: Cache Theos
-        uses: actions/cache@v4
-        with:
-          path: |
-            ${{ github.workspace }}/theos
-            ${{ github.workspace }}/.theos/sdks
-          key: theos-${{ runner.os }}-${{ hashFiles('.github/workflows/build.yml') }}
-          restore-keys: |
-            theos-${{ runner.os }}-
-
-      # 使用专门的 Install Theos Action
       - name: Install Theos
-        uses: Randomblock1/theos-action@v1
-        with:
-          theos-dir: 'theos'               # Theos 会被安装到 $GITHUB_WORKSPACE/theos
-          theos-src: 'https://github.com/theos/theos'
-          theos-sdks: 'https://github.com/theos/sdks'
-          theos-sdks-branch: 'master'
-          orion: 'false'                   # 你现在没用 Swift，关掉即可
-
-      - name: Build package
-        env:
-          THEOS: ${{ github.workspace }}/theos
         run: |
-          echo "THEOS in Build Package step: $THEOS"
-          make package FINALPACKAGE=1
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+          echo "THEOS=~/theos" >> $GITHUB_ENV
 
-      - name: Upload deb artifact
+      - name: Download iOS SDK
+        run: |
+          curl -LO https://github.com/theos/sdks/archive/master.zip
+          unzip master.zip
+          mkdir -p ~/theos/sdks
+          mv sdks-master/*.sdk ~/theos/sdks/
+          rm -r sdks-master master.zip
+
+      - name: Build Package
+        run: |
+          make package FINALPACKAGE=1 MESSAGES=0
+
+      - name: Upload Deb
         uses: actions/upload-artifact@v4
         with:
-          name: AutoCleaner-deb
+          name: AutoCleaner-Deb
           path: packages/*.deb
