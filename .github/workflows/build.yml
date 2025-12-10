@@ -1,8 +1,45 @@
-AutoCleaner/            # 仓库根目录
-  Makefile
-  Tweak.xm
-  control
-  AutoCleaner.plist
-  .github/
-    workflows/
-      build.yml
+name: Build Tweak
+
+on:
+  push:
+    branches:
+      - main        # 如果你的默认分支不是 main，改成 master 或其它名字
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    env:
+      THEOS: $HOME/theos
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          brew update
+          brew install ldid dpkg fakeroot
+
+      - name: Install Theos
+        run: |
+          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+
+      - name: Download iOS SDK
+        run: |
+          curl -LO https://github.com/theos/sdks/archive/master.zip
+          unzip master.zip
+          mkdir -p "$THEOS/sdks"
+          mv sdks-master/*.sdk "$THEOS/sdks/"
+          rm -rf sdks-master master.zip
+
+      - name: Build Package
+        run: |
+          make package FINALPACKAGE=1 MESSAGES=0
+
+      - name: Upload Deb
+        uses: actions/upload-artifact@v3
+        with:
+          name: AutoCleaner-Deb
+          path: packages/*.deb
