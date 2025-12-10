@@ -3,7 +3,7 @@ name: Build Tweak
 on:
   push:
     branches:
-      - main          # 如果默认分支不是 main，就改成你的分支名
+      - main      # 如果默认分支不是 main，就改成你的分支名
 
 jobs:
   build:
@@ -19,14 +19,15 @@ jobs:
       - name: Install dependencies
         run: |
           brew update
-          # 某些 runner 可能已经装了，失败也不致命，所以后面加 || true
           brew install ldid dpkg fakeroot || true
 
-            - name: Install Theos
+      - name: Install Theos
         run: |
-          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)" \
-            || echo "install-theos 在下载 SDK 时失败，忽略这一步，后面我们手动下 SDK"
-          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
+          if [ ! -d "$THEOS" ]; then
+            git clone --recursive https://github.com/theos/theos.git "$THEOS"
+          else
+            echo "Theos already exists at $THEOS"
+          fi
 
       - name: Download iOS SDK
         run: |
