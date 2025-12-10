@@ -4,6 +4,6 @@ Depends: mobilesubstrate
 Version: 1.0.0
 Architecture: iphoneos-arm
 Description: Auto Cleaner for iOS 16
-Maintainer: You
-Author: You
+Maintainer: 大威 <2070333333@qq.com>
+Author: 大威
 Section: Tweaks
