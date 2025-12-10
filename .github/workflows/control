@@ -1,9 +1,0 @@
-Package: com.user.autocleaner
-Name: AutoCleaner
-Depends: mobilesubstrate
-Version: 0.0.1
-Architecture: iphoneos-arm
-Description: iOS 16 Cleaner Button
-Maintainer: Me
-Author: Me
-Section: Tweaks
