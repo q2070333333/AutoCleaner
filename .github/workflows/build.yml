@@ -1,0 +1,32 @@
+name: Build Tweak
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Theos
+        run: |
+          bash -c "$(curl -fsSL [https://raw.githubusercontent.com/theos/theos/master/bin/install-theos](https://raw.githubusercontent.com/theos/theos/master/bin/install-theos))"
+          echo "THEOS=~/theos" >> $GITHUB_ENV
+
+      - name: Download iOS SDK
+        run: |
+          curl -LO [https://github.com/theos/sdks/archive/master.zip](https://github.com/theos/sdks/archive/master.zip)
+          unzip master.zip
+          mkdir -p ~/theos/sdks
+          mv sdks-master/*.sdk ~/theos/sdks/
+          rm -r sdks-master master.zip
+
+      - name: Build Package
+        run: |
+          make package FINALPACKAGE=1 MESSAGES=0
+
+      - name: Upload Deb
+        uses: actions/upload-artifact@v3
+        with:
+          name: AutoCleaner-Deb
+          path: packages/*.deb
