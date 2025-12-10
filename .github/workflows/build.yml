@@ -38,8 +38,9 @@ jobs:
         run: |
           make package FINALPACKAGE=1 MESSAGES=0
 
-      - name: Upload Deb
-        uses: actions/upload-artifact@v3
+           - name: Upload Deb
+        uses: actions/upload-artifact@v4
         with:
           name: AutoCleaner-Deb
           path: packages/*.deb
+
