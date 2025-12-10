@@ -3,33 +3,32 @@ name: Build Tweak
 on:
   push:
     branches:
-      - main      # 如果默认分支不是 main，就改成你的分支名
+      - main   # 你现在就是 main，就保持这样
 
 jobs:
   build:
     runs-on: macos-latest
 
+    env:
+      THEOS: $HOME/theos
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # 依赖：这里故意去掉 fakeroot，只装 ldid 和 dpkg
       - name: Install dependencies
         run: |
           brew update
-          brew install ldid dpkg fakeroot || true
+          brew install ldid dpkg || true
 
       - name: Install Theos
         run: |
-          # 正确设置 THEOS 路径，并写入 GITHUB_ENV
-          export THEOS="$HOME/theos"
-          echo "THEOS=$THEOS" >> "$GITHUB_ENV"
-
+          # 安装 theos 到 $HOME/theos，并写入环境变量（后面步骤能用）
           if [ ! -d "$THEOS" ]; then
-            echo "Cloning Theos into $THEOS"
             git clone --recursive https://github.com/theos/theos.git "$THEOS"
-          else
-            echo "Theos already exists at $THEOS"
           fi
+          echo "THEOS=$THEOS" >> "$GITHUB_ENV"
 
       - name: Download iOS SDK
         run: |
@@ -41,9 +40,13 @@ jobs:
           rm -rf sdks-master master.zip
 
       - name: Build Package
+        env:
+          THEOS: ${{ env.THEOS }}
+          FAKEROOT: ""     # 这里显式关闭 fakeroot
         run: |
           echo "THEOS in Build Package step: $THEOS"
-          make package FINALPACKAGE=1 MESSAGES=0
+          # 关键：FAKEROOT= 传给 make，禁止 theos 调用 fakeroot
+          make package FINALPACKAGE=1 MESSAGES=0 FAKEROOT=
 
       - name: Upload Deb
         uses: actions/upload-artifact@v4
