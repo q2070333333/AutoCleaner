@@ -1,48 +1,8 @@
-name: Build Tweak
-
-on:
-  push:
-    branches:
-      - main    # 如果你用的不是 main，自行改成你的分支名
-
-jobs:
-  build:
-    runs-on: macos-latest
-
-    env:
-      THEOS: $HOME/theos
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      # 可选：先装一下依赖（有些机器上缺 dpkg / ldid 会导致 make package 失败）
-      - name: Install dependencies
-        run: |
-          brew update
-          brew install ldid dpkg fakeroot
-
-      - name: Install Theos
-        run: |
-          bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
-          echo "THEOS=$HOME/theos" >> "$GITHUB_ENV"
-
-      - name: Download iOS SDK
-        run: |
-          curl -LO https://github.com/theos/sdks/archive/master.zip
-          unzip master.zip
-          mkdir -p "$THEOS/sdks"
-          mv sdks-master/*.sdk "$THEOS/sdks/"
-          rm -rf sdks-master master.zip
-
-      - name: Build Package
-        run: |
-          # 如果你的 tweak 不在仓库根目录，就在这里 cd 一下
-          # cd path/to/your/tweak
-          make package FINALPACKAGE=1 MESSAGES=0
-
-      - name: Upload Deb
-        uses: actions/upload-artifact@v3
-        with:
-          name: AutoCleaner-Deb
-          path: packages/*.deb
+AutoCleaner/            # 仓库根目录
+  Makefile
+  Tweak.xm
+  control
+  AutoCleaner.plist
+  .github/
+    workflows/
+      build.yml
