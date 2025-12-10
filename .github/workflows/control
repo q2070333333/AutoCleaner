@@ -1,0 +1,9 @@
+Package: com.yourname.autocleaner
+Name: AutoCleaner
+Depends: mobilesubstrate
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Auto Cleaner for iOS 16
+Maintainer: You
+Author: You
+Section: Tweaks
